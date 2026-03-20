@@ -4,6 +4,8 @@
 .env.development
 .env.production
 .env.test
+database.env
+config/database.env
 
 # IDE - Excluye configuraciones personales de editores de código
 .vscode/
