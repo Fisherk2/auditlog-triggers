@@ -18,19 +18,19 @@ SET client_min_messages = warning;
 -- Nota: Usamos variables de entorno para hacerlo dinámico y seguro
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_example') THEN
-        RAISE NOTICE 'Base de datos % ya existe. Omitiendo creación.', 'auditlog_example';
+    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_db_example') THEN
+        RAISE NOTICE 'Base de datos % ya existe. Omitiendo creación.', 'auditlog_db_example';
     ELSE
-        RAISE NOTICE 'Creando base de datos %...', 'auditlog_example';
+        RAISE NOTICE 'Creando base de datos %...', 'auditlog_db_example';
     END IF;
 END $$;
 
 -- ■■■■■■■■■■■ Crear base de datos (solo si no existe) ■■■■■■■■■■■■■■
 -- Nota: Usamos el usuario de la variable de entorno para hacerlo dinámico
 \set ON_ERROR_STOP on
-CREATE DATABASE auditlog_example
+CREATE DATABASE auditlog_db_example
     WITH 
-    OWNER = fisherk2
+    OWNER = auditlog_admin
     ENCODING = 'UTF8'
     LC_COLLATE = 'en_US.UTF-8'
     LC_CTYPE = 'en_US.UTF-8'
@@ -41,11 +41,11 @@ CREATE DATABASE auditlog_example
 
 -- ■■■■■■■■■■■■ Otorgar permisos básicos al usuario de la variable de entorno ■■■■■■■■■■■■
 -- Esto asegura que la base de datos sea accesible para scripts de migración subsecuentes
-GRANT ALL PRIVILEGES ON DATABASE auditlog_example TO current_user;
+GRANT ALL PRIVILEGES ON DATABASE auditlog_db_example TO current_user;
 
 -- ■■■■■■■■■■■■ Proporcionar instrucciones de uso para desarrolladores ■■■■■■■■■■■■
 -- Este comentario sirve como documentación para miembros del equipo
-COMMENT ON DATABASE auditlog_example IS 'Base de datos principal de la aplicación - creada con create_database.sql';
+COMMENT ON DATABASE auditlog_db_example IS 'Base de datos principal de la aplicación - creada con create_database.sql';
 
 -- ■■■■■■■■■■■■■ Desconectarse de la nueva base de datos para retornar al estado de conexión original ■■■■■■■■■■■■■
 -- Esto previene que scripts subsecuentes se ejecuten accidentalmente contra la base de datos incorrecta
@@ -55,7 +55,7 @@ COMMENT ON DATABASE auditlog_example IS 'Base de datos principal de la aplicaci�
 -- Esto proporciona retroalimentación clara de que la base de datos está lista para migraciones
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_example') THEN
-        RAISE NOTICE 'Script de creación de base de datos completado. Base de datos "auditlog_example" está lista para migraciones.';
+    IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_db_example') THEN
+        RAISE NOTICE 'Script de creación de base de datos completado. Base de datos "auditlog_db_example" está lista para migraciones.';
     END IF;
 END $$;
