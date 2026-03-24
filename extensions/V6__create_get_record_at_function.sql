@@ -69,6 +69,7 @@ DECLARE
     v_last_state JSONB := NULL;
     v_record_found BOOLEAN := FALSE;
     v_effective_timestamp TIMESTAMP WITH TIME ZONE := p_as_of;
+    change_record RECORD;
 BEGIN
     -- Validación de seguridad: verificar que la tabla existe y no es del sistema
     SELECT EXISTS (
