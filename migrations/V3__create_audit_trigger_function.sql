@@ -122,7 +122,7 @@ BEGIN
             -- Log del error sin romper la transacción original
             RAISE NOTICE '⚠️  Error en auditoría: %', SQLERRM;
             -- Continuar con la operación original
-    END IF;
+    END;
     
     -- Return según operación para no interferir con CRUD
     IF TG_OP = 'DELETE' THEN
