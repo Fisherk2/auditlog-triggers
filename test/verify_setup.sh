@@ -35,12 +35,12 @@ validate_connection() {
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
     # Intentar conexión básica sin mostrar credenciales
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d postgres -c "SELECT 1;" >/dev/null 2>&1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d postgres -c "SELECT 1;" >/dev/null 2>&1; then
         print_message $GREEN "✅" "Conexión a PostgreSQL exitosa"
         return 0
     else
         print_message $RED "❌" "Error: No se puede conectar a PostgreSQL"
-        print_message $YELLOW "💡" "Verifica que PostgreSQL esté corriendo y las credenciales en .env"
+        print_message $YELLOW "💡" "Verifica que PostgreSQL esté corriendo y las credenciales en config/database.env"
         VALIDATION_ERRORS=$((VALIDATION_ERRORS + 1))
         return 1
     fi
@@ -52,10 +52,10 @@ validate_database() {
     print_message $BLUE "🔍" "Validando existencia de la base de datos..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-your_database_name}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     
     # Verificar si la BD existe
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name';" | grep -q 1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name';" | grep -q 1; then
         print_message $GREEN "✅" "Base de datos '$db_name' existe"
         return 0
     else
@@ -74,12 +74,12 @@ validate_domain_tables() {
     print_message $BLUE "🔍" "Validando tablas de dominio (customers, products, orders)..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     local tables=("customers" "products" "orders")
     local missing_tables=()
     
     for table in "${tables[@]}"; do
-        if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='$table';" | grep -q 1; then
+        if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='$table';" | grep -q 1; then
             print_message $GREEN "✅" "Tabla '$table' existe"
         else
             print_message $RED "❌" "Tabla '$table' NO existe"
@@ -102,15 +102,15 @@ validate_audit_log_table() {
     print_message $BLUE "🔍" "Validando tabla audit_log..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_log';" | grep -q 1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='audit_log';" | grep -q 1; then
         print_message $GREEN "✅" "Tabla audit_log existe"
         
         # Validar estructura básica
-        local columns=("audit_id" "table_name" "record_id" "operation" "old_data" "new_data" "changed_by" "changed_at")
+        local columns=("id" "table_name" "record_id" "operation" "old_data" "new_data" "changed_by" "changed_at")
         for col in "${columns[@]}"; do
-            if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.columns WHERE table_name='audit_log' AND column_name='$col';" | grep -q 1; then
+            if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.columns WHERE table_name='audit_log' AND column_name='$col';" | grep -q 1; then
                 print_message $GREEN "✅" "Columna audit_log.$col existe"
             else
                 print_message $RED "❌" "Columna audit_log.$col NO existe"
@@ -132,12 +132,12 @@ validate_triggers() {
     print_message $BLUE "🔍" "Validando triggers de auditoría..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     local tables=("customers" "products" "orders")
     local missing_triggers=()
     
     for table in "${tables[@]}"; do
-        if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_trigger WHERE tgname='tg_${table}_audit';" | grep -q 1; then
+        if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_trigger WHERE tgname='${table}_audit_trigger';" | grep -q 1; then
             print_message $GREEN "✅" "Trigger para tabla '$table' existe"
         else
             print_message $RED "❌" "Trigger para tabla '$table' NO existe"
@@ -160,9 +160,9 @@ validate_audit_function() {
     print_message $BLUE "🔍" "Validando función audit_trigger_func..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_proc WHERE proname='audit_trigger_func';" | grep -q 1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_proc WHERE proname='audit_trigger_func';" | grep -q 1; then
         print_message $GREEN "✅" "Función audit_trigger_func existe"
         return 0
     else
@@ -179,10 +179,10 @@ validate_extensions() {
     print_message $BLUE "🔍" "Validando extensiones (vista audit_history, función get_record_at)..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     
     # Validar vista audit_history
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.views WHERE table_name='audit_history';" | grep -q 1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM information_schema.views WHERE table_name='audit_history';" | grep -q 1; then
         print_message $GREEN "✅" "Vista audit_history existe"
     else
         print_message $RED "❌" "Vista audit_history NO existe"
@@ -191,7 +191,7 @@ validate_extensions() {
     fi
     
     # Validar función get_record_at
-    if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_proc WHERE proname='get_record_at';" | grep -q 1; then
+    if PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT 1 FROM pg_proc WHERE proname='get_record_at';" | grep -q 1; then
         print_message $GREEN "✅" "Función get_record_at existe"
     else
         print_message $RED "❌" "Función get_record_at NO existe"
@@ -206,12 +206,12 @@ validate_seed_data() {
     print_message $BLUE "🔍" "Validando datos seed en tablas de dominio..."
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     
-    local db_name="${DB_NAME:-auditlog_db_example}"
+    local db_name="${POSTGRES_DB:-auditlog_db_example}"
     local tables=("customers" "products" "orders")
     local empty_tables=()
     
     for table in "${tables[@]}"; do
-        local count=$(PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST:-localhost}" -p "${DB_PORT:-5432}" -U "${DB_USER:-postgres}" -d "$db_name" -tAc "SELECT COUNT(*) FROM $table;")
+        local count=$(PGPASSWORD="${POSTGRES_PASSWORD:-}" psql -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "$db_name" -tAc "SELECT COUNT(*) FROM $table;")
         if [ "$count" -gt 0 ]; then
             print_message $GREEN "✅" "Tabla '$table' tiene $count registros"
         else
@@ -270,13 +270,13 @@ validate_env_config() {
 load_env_file() {
     print_message $BLUE "🔍" "Cargando configuración desde .env..."
     
-    if [ -f ".env" ]; then
+    if [ -f "config/database.env" ]; then
         # Cargar variables de entorno (ignorar líneas con # y vacías)
-        export $(grep -v '^#' .env | grep -v '^$' | xargs)
-        print_message $GREEN "✅" "Archivo .env cargado"
+        export $(grep -v '^#' config/database.env | grep -v '^$' | xargs)
+        print_message $GREEN "✅" "Archivo config/database.env cargado"
     else
-        print_message $YELLOW "⚠️" "Archivo .env no encontrado, usando valores por defecto"
-        print_message $YELLOW "💡" "Crea .env desde config/database.env.example"
+        print_message $YELLOW "⚠️" "Archivo config/database.env no encontrado, usando valores por defecto"
+        print_message $YELLOW "💡" "Crea config/database.env desde config/database.env.example"
     fi
 }
 
@@ -334,7 +334,7 @@ main() {
         print_message $GREEN "🎉" "El sistema de auditoría está listo para usar."
         echo ""
         print_message $BLUE "💡" "Próximos pasos:"
-        print_message $BLUE "💡" "1. Ejecuta: psql -d ${DB_NAME:-auditlog_db_example} -f queries/test_audit_operations.sql"
+        print_message $BLUE "💡" "1. Ejecuta: psql -d ${POSTGRES_DB:-auditlog_db_example} -f queries/test_audit_operations.sql"
         print_message $BLUE "💡" "2. Revisa: queries/example_audit_queries.sql para ejemplos de uso"
         exit 0
     else

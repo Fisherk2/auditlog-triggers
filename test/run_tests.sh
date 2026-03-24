@@ -21,7 +21,7 @@ psql -U auditlog_admin -h localhost -d auditlog_db_example -f extensions/V6__cre
 psql -U auditlog_admin -h localhost -d auditlog_db_example -f seeds/seed_ecommerce_data.sql
 
 # Ejecutar script de verificacion de configuracion de la base de datos
-./verify_setup.sh
+bash test/verify_setup.sh
 
 # Ejecutar script de prueba de operaciones de auditoria
 psql -U auditlog_admin -h localhost -d auditlog_db_example -f queries/test_audit_operations.sql
