@@ -1,87 +1,113 @@
--- 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙
--- DANGEROUS SCRIPT - DROP DATABASE
--- Purpose: Borra la base de datos del proyecto con múltiples salvaguardas
+-- 🮙🮘🮙🮘🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙
+-- LIMPIEZA COMPLETA DEL SISTEMA DE AUDITORÍA
+-- Purpose: Elimina base de datos, usuario y todos los componentes del sistema
 -- Author: fisherk2
--- Version: 1.0
--- Date: 2026-03-20
--- DANGER LEVEL: CRITICAL - OPERACIÓN DESTRUCTIVA
--- 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙🮙🮘🮙
+-- Version: 2.0 - Versión completa con limpieza de componentes
+-- Date: 2026-03-24
+-- DANGER LEVEL: CRITICAL - OPERACIÓN DESTRUCTIVA COMPLETA
+-- 🮙🮘🮙🮘🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙
 
--- ⚠️⚠️⚠️ ADVERTENCIA: ESTE SCRIPT ELIMINARÁ TODOS LOS DATOS ⚠️⚠️⚠️
+-- ⚠️⚠️⚠️ ADVERTENCIA: ESTE SCRIPT ELIMINARÁ TODOS LOS DATOS Y COMPONENTES ⚠️⚠️⚠️
 -- ⚠️⚠️⚠️ ADVERTENCIA: ESTA OPERACIÓN ES IRREVERSIBLE ⚠️⚠️⚠️
 -- ⚠️⚠️⚠️ ADVERTENCIA: NUNCA EJECUTAR EN PRODUCCIÓN SIN APROBACIÓN ⚠️⚠️⚠️
 
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
--- VERIFICACIÓN DE SEGURIDAD - NO CONTINUAR SI NO ESTÁ SEGURO
+-- FASE 1: VERIFICACIÓN Y PREPARACIÓN
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
 
--- ■■■■■■■■■■■■■ Editar el nombre de la base de datos antes de ejecutar ■■■■■■■■■■■■■
--- Cambiar 'auditlog_example' por el nombre real de la base de datos
 DO $$
 BEGIN
-    RAISE NOTICE 'Verificación de seguridad: Editar el nombre de la base de datos antes de continuar';
-    RAISE NOTICE 'Nombre actual: auditlog_db_example - DEBE SER CAMBIADO';
-END $$;
-
---◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
--- ELIMINACIÓN CONDICIONAL Y SEGURA
---◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-
--- ■■■■■■■■■■■■■ Verificar si la base de datos existe antes de intentar eliminarla ■■■■■■■■■■■■■
--- Esto previene errores si la base de datos ya fue eliminada
-DO $$
-BEGIN
+    -- Verificar si la base de datos existe
     IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_db_example') THEN
-        RAISE NOTICE 'Base de datos encontrada: %', 'auditlog_db_example';
+        RAISE NOTICE '🗑️ Base de datos encontrada: auditlog_db_example';
+        RAISE NOTICE '� Terminando conexiones activas...';
+        
         -- Terminar todas las conexiones activas a la base de datos
-        -- Esto previene el error "database is being accessed by other users"
-        RAISE NOTICE 'Terminando conexiones activas...';
         PERFORM pg_terminate_backend(pid) 
         FROM pg_stat_activity 
         WHERE datname = 'auditlog_db_example' 
         AND pid <> pg_backend_pid();
-        -- Esperar un momento para que las conexiones se terminen completamente
+        
+        -- Esperar un momento para que las conexiones se terminen
         PERFORM pg_sleep(1);
-        RAISE NOTICE 'Eliminando base de datos: %', 'auditlog_db_example';
-        -- Salir del bloque DO para ejecutar DROP DATABASE fuera de transacción
-        RAISE NOTICE 'Saliendo del bloque de transacción para eliminar base de datos...';
+        
+        RAISE NOTICE '🗑️ Eliminando base de datos: auditlog_db_example';
     ELSE
-        RAISE NOTICE 'La base de datos % no existe, no se requiere eliminación', 'auditlog_db_example';
+        RAISE NOTICE 'ℹ️ La base de datos auditlog_db_example no existe';
     END IF;
     
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Error al verificar base de datos: %', SQLERRM;
+        RAISE NOTICE '⚠️ Error en preparación: %', SQLERRM;
 END $$;
 
--- ◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤ ⎡ Ejecutar DROP DATABASE fuera de transacción ⎦ ◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+--◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+-- FASE 2: ELIMINACIÓN DE BASE DE DATOS
+--◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+
 DROP DATABASE IF EXISTS auditlog_db_example;
 
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
--- VERIFICACIÓN FINAL
+-- FASE 3: ELIMINACIÓN DE USUARIO
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
 
--- ■■■■■■■■■■■■■ Confirmar que la base de datos fue eliminada ■■■■■■■■■■■■■
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_db_example') THEN
-        RAISE NOTICE '✅ Verificación exitosa: La base de datos ya no existe';
+    -- Eliminar usuario de la base de datos
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'auditlog_admin') THEN
+        RAISE NOTICE '🗑️ Eliminando usuario: auditlog_admin';
+        EXECUTE 'DROP USER IF EXISTS auditlog_admin';
     ELSE
-        RAISE EXCEPTION '❌ Error: La base de datos todavía existe';
+        RAISE NOTICE 'ℹ️ El usuario auditlog_admin no existe';
     END IF;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE '⚠️ Error al eliminar usuario: %', SQLERRM;
 END $$;
 
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
--- INSTRUCCIONES DE USO SEGURO
+-- FASE 4: VERIFICACIÓN FINAL
 --◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
 
---▁▂▃▄▅▆▇███████ CÓMO EJECUTAR ESTE SCRIPT DE FORMA SEGURA ███████▇▆▅▄▃▂▁
+DO $$
+BEGIN
+    RAISE NOTICE '';
+    RAISE NOTICE '🎉 LIMPIEZA COMPLETA FINALIZADA';
+    RAISE NOTICE '==========================================';
+    
+    -- Verificar base de datos
+    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'auditlog_db_example') THEN
+        RAISE NOTICE '✅ Base de datos: auditlog_db_example - ELIMINADA';
+    ELSE
+        RAISE NOTICE '❌ Base de datos: auditlog_db_example - AÚN EXISTE';
+    END IF;
+    
+    -- Verificar usuario
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'auditlog_admin') THEN
+        RAISE NOTICE '✅ Usuario: auditlog_admin - ELIMINADO';
+    ELSE
+        RAISE NOTICE '❌ Usuario: auditlog_admin - AÚN EXISTE';
+    END IF;
+    
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE '🔄 Para reinstalar, ejecuta: ./test/run_tests.sh';
+    RAISE NOTICE '';
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Error en verificación final: %', SQLERRM;
+END $$;
 
--- 1. Backup completo de la base de datos: pg_dump auditlog_db_example > backup.sql
--- 2. Verificar que estás en el entorno correcto (development/testing)
--- 3. Editar 'auditlog_db_example' con el nombre real de la BD
--- 4. Ejecutar: psql -U postgres -d postgres -f drop_database.sql
--- 5. Verificar que la base de datos fue eliminada: \l
+--◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+-- INSTRUCCIONES DE USO
+--◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
 
--- ⚠️⚠️⚠️ RECORDATORIO FINAL: ESTE SCRIPT ES DESTRUCTIVO ⚠️⚠️⚠️
+--▁▂▃▄▅▆▇███████ CÓMO EJECUTAR ESTE SCRIPT ███████▇▆▅▄▃▂▁
+
+-- 1. Verificar que estás en el entorno correcto (development/testing)
+-- 2. Ejecutar: psql -U postgres -d postgres -f drop_database.sql
+-- 3. Verificar que todo fue eliminado: \l y \du
+
+-- ⚠️⚠️⚠️ RECORDATORIO FINAL: ESTE SCRIPT ES DESTRUCTIVO COMPLETO ⚠️⚠️⚠️
 -- ⚠️⚠️⚠️ NO EJECUTAR EN PRODUCCIÓN SIN SUPERVISIÓN ⚠️⚠️⚠️

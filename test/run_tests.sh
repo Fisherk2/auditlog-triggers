@@ -29,8 +29,5 @@ psql -U auditlog_admin -h localhost -d auditlog_db_example -f queries/test_audit
 # Ejecutar script de consultas de ejemplo para auditoria
 psql -U auditlog_admin -h localhost -d auditlog_db_example -f queries/example_audit_queries.sql
 
-# Eliminar base de datos
+# Limpieza completa del sistema (base de datos, usuario y componentes)
 psql -U postgres -h localhost -d postgres -f drop_database.sql
-
-# Eliminar usuario de la base de datos
-psql -U postgres -h localhost -d postgres -c "DROP USER IF EXISTS auditlog_admin;"
