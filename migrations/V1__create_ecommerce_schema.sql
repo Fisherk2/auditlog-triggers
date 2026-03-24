@@ -153,7 +153,7 @@ COMMENT ON COLUMN orders.total_amount IS 'Monto total de la orden (no puede ser 
 COMMENT ON COLUMN orders.status IS 'Estado actual de la orden (pending, confirmed, shipped, delivered, cancelled)';
 COMMENT ON COLUMN orders.created_at IS 'Fecha de creación del registro (dato de negocio)';
 COMMENT ON COLUMN orders.updated_at IS 'Última fecha de modificación del registro (dato de negocio)';
-COMMENT ON CONSTRAINT fk_orders_customer IS 'Protege integridad: no permite eliminar clientes con órdenes asociadas';
+COMMENT ON CONSTRAINT fk_orders_customer ON orders IS 'Protege integridad: no permite eliminar clientes con órdenes asociadas';
 
 COMMIT;
 
