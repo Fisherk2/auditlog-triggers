@@ -1,0 +1,143 @@
+# 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘
+# Docker Compose - Entorno de Desarrollo PostgreSQL Audit System
+# 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘
+# Propósito: Entorno reproducible para evaluación y desarrollo del sistema
+# Arquitectura: Clean Architecture - infraestructura externa intercambiable
+# Stack: PostgreSQL 15 + Alpine Linux + Docker Compose v3.8
+
+version: '3.8'
+
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+# Volúmenes Named - Persistencia de Datos
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+volumes:
+  postgres_data:
+    driver: local
+    # Nota: Los datos persisten entre reinicios del contenedor
+    # Advertencia: `docker-compose down -v` eliminará este volumen
+
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+# Redes Custom - Aislamiento y Comunicación
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+networks:
+  audit-network:
+    driver: bridge
+    # Nota: Red aislada para seguridad y organización
+    # Permite futuros servicios (ej: app web) conectarse a PostgreSQL
+
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+# Servicios - Contenedores de la Aplicación
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+services:
+  # ▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▣▢▣▢▣▢▣
+  # Servicio PostgreSQL - Base de Datos Principal
+  # ▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▢▣▣▢▣▢▣▢▣
+  postgres-audit:
+    # Decisión: postgres:15-alpine (equilibrio tamaño/compatibilidad)
+    # Alpine: ~50MB vs ~300MB Debian, pull más rápido, menor superficie de ataque
+    # PostgreSQL 15: Compatible con JSONB, triggers, PL/pgSQL usados
+    # No usar "latest": Garantiza reproducibilidad exacta del entorno
+    image: postgres:15-alpine
+    
+    # Nombre descriptivo y único para fácil identificación
+    container_name: audit-log-db-example
+    
+    # Mapeo de puertos - Evitar conflicto con PostgreSQL nativo del host
+    # Host:5433 → Container:5432 (PostgreSQL interno)
+    # Si 5433 está ocupado, cambiar a 5434:5432
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"
+    
+    # Variables de entorno con fallback a valores seguros para desarrollo
+    # Prioridad: .env → variables exportadas → valores por defecto
+    environment:
+      # Usuario administrador de PostgreSQL
+      POSTGRES_USER: "${DB_USER:-audit_admin}"
+      
+      # Contraseña del usuario (usar valores seguros en producción)
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-pimpumpapas}"
+      
+      # Base de datos inicial creada automáticamente
+      POSTGRES_DB: "${DB_NAME:-auditlog_db_example}"
+      
+      # Opcional: Configuración adicional de PostgreSQL
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    
+    # Volumes - Persistencia y Configuración
+    volumes:
+      # Persistencia de datos de PostgreSQL
+      # Ubicación estándar de datos en Alpine PostgreSQL
+      - postgres_data:/var/lib/postgresql/data
+      
+      # Opcional: Auto-aplicar migraciones al iniciar
+      # Los archivos .sql en /docker-entrypoint-initdb.d se ejecutan en orden alfabético
+      # Comentado por defecto para ejecutar migraciones manualmente
+      # - ./migrations:/docker-entrypoint-initdb.d:ro
+    
+    # Healthcheck - Verificar que PostgreSQL está listo
+    # pg_isready: comando nativo de PostgreSQL para verificar disponibilidad
+    # --timeout=5s: timeout de 5 segundos para la respuesta
+    # --quiet: output minimal, solo código de salida
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --timeout=5s --quiet -U ${DB_USER:-audit_admin} -d ${DB_NAME:-auditlog_db_example}"]
+      interval: 10s      # Verificar cada 10 segundos
+      timeout: 5s        # Timeout de 5 segundos por verificación
+      retries: 5         # Reintentar 5 veces antes de marcar como unhealthy
+      start_period: 30s  # Período de gracia de 30 segundos al iniciar
+    
+    # Política de reinicio - Comportamiento ante fallos
+    # unless-stopped: Reiniciar automáticamente excepto si se detiene manualmente
+    # Ideal para desarrollo: mantiene el contenedor corriendo entre sesiones
+    restart: unless-stopped
+    
+    # Red - Conectar a la red aislada
+    networks:
+      - audit-network
+    
+    # Labels - Metadatos para organización y monitoreo
+    labels:
+      # Identificación del proyecto
+      - "project=audit-log-triggers"
+      
+      # Versión del sistema
+      - "version=1.0.0"
+      
+      # Entorno (development/staging/production)
+      - "environment=development"
+      
+      # Descripción del servicio
+      - "description=PostgreSQL database for audit system"
+
+# ▁▂▃▄▅▆▇███████ COMANDOS DE UTILIDAD ███████▇▆▅▄▃▂▁ 
+#
+# Iniciar el contenedor en background:
+#   docker-compose up -d
+#
+# Ver logs en tiempo real:
+#   docker-compose logs -f postgres-audit
+#
+# Conectar con psql (después de que el healthcheck marque "healthy"):
+#   psql -h localhost -p 5433 -U audit_admin -d auditlog_db_example
+#
+# Ver estado del contenedor:
+#   docker-compose ps
+#
+# Detener contenedor (los datos persisten):
+#   docker-compose down
+#
+# Detener y ELIMINAR DATOS (¡cuidado!):
+#   docker-compose down -v
+#
+# Reconstruir imagen (si se modifica el Dockerfile):
+#   docker-compose up --build
+#
+# Acceder al shell del contenedor:
+#   docker-compose exec postgres-audit sh
+#
+# Ver logs de PostgreSQL específicamente:
+#   docker-compose logs postgres-audit | grep "database system is ready"
+#
+# Cambiar puerto si 5433 está ocupado:
+#   export DB_HOST_PORT=5434 && docker-compose up -d
+#
+# ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
