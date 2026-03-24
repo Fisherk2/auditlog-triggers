@@ -113,7 +113,7 @@ auditlog-triggers/
 
 ```bash
 # 1. Clonar el repositorio
-git clone <repository-url>
+git clone https://github.com/Fisherk2/auditlog-triggers
 cd auditlog-triggers
 
 # 2. Configurar conexión a base de datos
@@ -269,6 +269,16 @@ psql -d your_database -f queries/test_audit_operations.sql
 ---
 
 ## 🤝 Contribución
+
+¿Interesado/a en contribuir? 🎉 Consulta nuestra **[Guía de Contribución](CONTRIBUTING.MD)** para:
+
+- 📋 Pasos detallados para configurar tu entorno
+- 📝 Estándares de código y convenciones
+- 🔍 Proceso de Pull Request y code reviews
+- 🐛 Cómo reportar bugs y proponer features
+- 📜 Código de conducta y lineamientos de colaboración
+
+### Resumen Rápido
 
 1. Fork del repositorio
 2. Crear feature branch (`git checkout -b feature/amazing-feature`)
