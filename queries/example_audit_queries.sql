@@ -1,15 +1,15 @@
--- 🮙🮘🮙🮘🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮙🮙🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙
--- EXAMPLE AUDIT QUERIES (DOCUMENTACIÓN EJECUTABLE)
--- 🮙🮘🮙🮘🮙🮙🮙🮘🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙🮙
--- Propósito: Demostrar uso real del sistema de auditoría como especificación ejecutable
--- Arquitectura: Clean Architecture - ejemplos en capa externa de documentación
--- Patrón: Executable Specification - documentación que se puede validar
+/*markdown
+# EXAMPLE AUDIT QUERIES (DOCUMENTACIÓN EJECUTABLE)
 
--- ================================================================================
--- SECCIÓN 1: CONSULTAS BÁSICAS DE AUDITORÍA
--- ================================================================================
--- Estas consultas demuestran el uso fundamental del sistema de auditoría
--- Son el punto de entrada para analistas y auditores nuevos
+- Propósito: Demostrar uso real del sistema de auditoría como especificación ejecutable
+- Arquitectura: Clean Architecture - ejemplos en capa externa de documentación
+- Patrón: Executable Specification - documentación que se puede validar
+*/
+
+/*markdown
+## Seccion 1: Consultas básicas de auditoria
+Estas consultas demuestran el uso fundamental del sistema de auditoría, son el punto de entrada para analistas y auditores nuevos
+*/
 
 -- 1. Últimos 10 cambios en el sistema (cualquier tabla)
 -- Propósito: Vista general de actividad reciente para monitoreo en tiempo real
@@ -77,11 +77,10 @@ FROM audit_history
 GROUP BY table_name, operation
 ORDER BY table_name, operation;
 
--- ================================================================================
--- SECCIÓN 2: CONSULTAS CON JSONB
--- ================================================================================
--- Estas consultas demuestran el poder de JSONB para análisis detallado
--- Los operadores JSONB permiten extraer y filtrar datos específicos
+/*markdown
+## SECCIÓN 2: CONSULTAS CON JSONB
+Estas consultas demuestran el poder de JSONB para análisis detallado. Los operadores JSONB permiten extraer y filtrar datos específicos
+*/
 
 -- 6. Extraer campo específico de old_data (precio anterior de producto)
 -- Propósito: Ver historial de precios de un producto específico
@@ -136,15 +135,15 @@ ORDER BY changed_at DESC;
 -- Output esperado: Cambios de precio con diferencias calculadas
 SELECT 
     record_id,
-    old_data->>'price'::NUMERIC as old_price,
-    new_data->>'price'::NUMERIC as new_price,
-    (new_data->>'price'::NUMERIC - old_data->>'price'::NUMERIC) as price_difference,
+    (old_data->>'price')::NUMERIC as old_price,
+    (new_data->>'price')::NUMERIC as new_price,
+    ((new_data->>'price')::NUMERIC - (old_data->>'price')::NUMERIC) as price_difference,
     changed_at
 FROM audit_history 
 WHERE table_name = 'products' 
 AND operation = 'U'
-AND old_data->>'price'::NUMERIC != new_data->>'price'::NUMERIC
-ORDER BY ABS(new_data->>'price'::NUMERIC - old_data->>'price'::NUMERIC) DESC;
+AND (old_data->>'price')::NUMERIC != (new_data->>'price')::NUMERIC
+ORDER BY ABS((new_data->>'price')::NUMERIC - (old_data->>'price')::NUMERIC) DESC;
 
 -- 10. Filtrar por contenido dentro de JSONB (productos con precio > 100)
 -- Propósito: Encontrar cambios en productos de alto valor
@@ -158,14 +157,13 @@ SELECT
     changed_at
 FROM audit_history 
 WHERE table_name = 'products'
-AND new_data->>'price'::NUMERIC > 100
+AND (new_data->>'price')::NUMERIC > 100
 ORDER BY changed_at DESC;
 
--- ================================================================================
--- SECCIÓN 3: CONSULTAS DE TIME-TRAVEL
--- ================================================================================
--- Estas consultas demuestran la capacidad de reconstrucción histórica
--- Usan la función get_record_at() para consultar estados pasados
+/*markdown
+## SECCIÓN 3: CONSULTAS DE TIME-TRAVEL
+Estas consultas demuestran la capacidad de reconstrucción histórica. Usan la función get_record_at() para consultar estados pasados
+*/
 
 -- 11. Usar get_record_at() para ver estado histórico de producto
 -- Propósito: Ver cómo era un producto en una fecha específica
@@ -201,11 +199,10 @@ SELECT
     as_of_timestamp
 FROM get_record_at('orders', 1, '2024-01-12 10:00:00-06:00'::timestamp);
 
--- ================================================================================
--- SECCIÓN 4: CONSULTAS ANALÍTICAS
--- ================================================================================
--- Estas consultas demuestran análisis avanzados para business intelligence
--- Combinan agregación con datos de auditoría para insights
+/*markdown
+## SECCIÓN 4: CONSULTAS ANALÍTICAS
+Estas consultas demuestran análisis avanzados para business intelligence. Combinan agregación con datos de auditoría para insights
+*/
 
 -- 14. Dashboard: cambios por día en última semana
 -- Propósito: Tendencia de actividad diaria para monitoreo
@@ -235,10 +232,10 @@ GROUP BY table_name, record_id
 ORDER BY modification_count DESC
 LIMIT 5;
 
--- ================================================================================
--- SECCIÓN 5: CONSULTAS DE DIAGNÓSTICO
--- ================================================================================
--- Estas consultas ayudan a diagnosticar problemas en el sistema
+/*markdown
+## SECCIÓN 5: CONSULTAS DE DIAGNÓSTICO
+Estas consultas ayudan a diagnosticar problemas en el sistema
+*/
 
 -- 16. Detectar posibles errores (DELETEs masivos)
 -- Propósito: Identificar operaciones inusualmente destructivas
