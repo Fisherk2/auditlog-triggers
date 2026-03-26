@@ -96,8 +96,6 @@ auditlog-triggers/
 ├── 📁 seeds/                        # Datos de prueba
 │   └── 📄 seed_ecommerce_data.sql
 └── 📁 docs/                         # Documentación técnica
-    ├── 📄 ERD.md                    # Diagramas y diccionario
-    └── 📄 EXTENSION_GUIDE.md        # Guía de extensión
 ```
 
 ---
@@ -108,29 +106,38 @@ auditlog-triggers/
 - PostgreSQL 12+ con permisos de CREATE TRIGGER
 - psql o cliente PostgreSQL
 - Git
+- Docker (opcional, para desarrollo local)
 
 ### Instalación (5 minutos)
 
+#### 1. Clonar el repositorio
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/Fisherk2/auditlog-triggers
 cd auditlog-triggers
+```
 
-# 2. Configurar conexión a base de datos
+#### 2. Configurar conexión a base de datos
+```bash
 cp config/database.env.example config/database.env
 # Editar config/database.env con tus credenciales
+```
 
-# 3. Aplicar migraciones en orden
+#### 3. Aplicar migraciones en orden
+```bash
 psql -d your_database -f migrations/V1__create_ecommerce_schema.sql
 psql -d your_database -f migrations/V2__create_audit_log_table.sql
 psql -d your_database -f migrations/V3__create_audit_trigger_function.sql
 psql -d your_database -f migrations/V4__apply_triggers_to_tables.sql
+```
 
-# 4. Aplicar extensiones
+#### 4. Aplicar extensiones
+```bash
 psql -d your_database -f extensions/V5__create_audit_history_view.sql
 psql -d your_database -f extensions/V6__create_get_record_at_function.sql
+```
 
-# 5. Poblar datos de prueba
+#### 5. Poblar datos de prueba
+```bash
 psql -d your_database -f seeds/seed_ecommerce_data.sql
 ```
 
