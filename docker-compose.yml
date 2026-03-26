@@ -1,11 +1,10 @@
 # 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘
 # Docker Compose - Entorno de Desarrollo PostgreSQL Audit System
-# 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘
+# 🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘🮙🮙🮘🮙🮘
 # Propósito: Entorno reproducible para evaluación y desarrollo del sistema
 # Arquitectura: Clean Architecture - infraestructura externa intercambiable
 # Stack: PostgreSQL 15 + Alpine Linux + Docker Compose v3.8
 
-version: '3.8'
 
 # ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 # Volúmenes Named - Persistencia de Datos
@@ -46,19 +45,19 @@ services:
     # Host:5433 → Container:5432 (PostgreSQL interno)
     # Si 5433 está ocupado, cambiar a 5434:5432
     ports:
-      - "${DB_HOST_PORT:-5433}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     
     # Variables de entorno con fallback a valores seguros para desarrollo
     # Prioridad: .env → variables exportadas → valores por defecto
     environment:
       # Usuario administrador de PostgreSQL
-      POSTGRES_USER: "${DB_USER:-audit_admin}"
+      POSTGRES_USER: "${POSTGRES_USER:-auditlog_admin}"
       
       # Contraseña del usuario (usar valores seguros en producción)
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-pimpumpapas}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-pimpumpapas}"
       
       # Base de datos inicial creada automáticamente
-      POSTGRES_DB: "${DB_NAME:-auditlog_db_example}"
+      POSTGRES_DB: "${POSTGRES_DB:-auditlog_db_example}"
       
       # Opcional: Configuración adicional de PostgreSQL
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
@@ -79,7 +78,7 @@ services:
     # --timeout=5s: timeout de 5 segundos para la respuesta
     # --quiet: output minimal, solo código de salida
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready --timeout=5s --quiet -U ${DB_USER:-audit_admin} -d ${DB_NAME:-auditlog_db_example}"]
+      test: ["CMD-SHELL", "pg_isready --timeout=5s --quiet -U ${POSTGRES_USER:-audit_admin} -d ${POSTGRES_DB:-auditlog_db_example}"]
       interval: 10s      # Verificar cada 10 segundos
       timeout: 5s        # Timeout de 5 segundos por verificación
       retries: 5         # Reintentar 5 veces antes de marcar como unhealthy
